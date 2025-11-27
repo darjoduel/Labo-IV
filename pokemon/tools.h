@@ -1,0 +1,132 @@
+#ifndef TOOLS_H
+#define TOOLS_H
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+int largestStr(char *arr[], int n);
+int largestOpt(char *choices[], int n_choice, const char *title);
+unsigned long fileLines(const char *file, int opt);
+char **readText(const char *file);
+
+/**
+ * @brief Recorre un arreglo de strings, y devuelve la cantidad del string mas largo
+ * 
+ * @param arr arreglo strings
+ * @param n cantidad de strings
+ * @return int -> cantidad del str mas largo
+ */
+int largestStr(char *arr[], int n)
+{
+    if(n <= 0)
+    {
+        perror("No array length");
+        exit(1);
+    }
+    int max = 0, count = 0;
+    for(int i = 0; i < n; i++)
+    {
+        count = (int)strlen(arr[i]);
+        if(count > max)
+            max = count;
+    }
+    return max;
+}
+
+/**
+ * @brief Calcula el ancho optimo para la ventana de menu
+ * 
+ * @param m estructura menu
+ * @return int -> Ancho optimo
+ */
+int largestOpt(char *choices[], int n_choice, const char *title)
+{
+    int length = largestStr(choices, n_choice);
+    if(length < (int)strlen(title))
+        return (int)strlen(title) + 4;
+    else
+        return length + 6;
+}
+/**
+ * @brief Devuelve el numero de lineas o el maximo de caracteres de un string dentro de un archivo
+ * 
+ * @param file 
+ * @param opt elegir: cantidad de lineas = 0 / maximo de caracteres = 1
+ * @return unsigned long 
+ */
+unsigned long fileLines(const char *file, int opt)
+{
+    FILE *txt = fopen(file, "r");
+    if(!txt)
+    {
+        printf("Error: file '%s' not found\n", file);
+        return 0;
+    }
+    unsigned long lines_count = 0, char_count = 0, WMAX = 0;
+    char t;
+    while ((t = fgetc(txt)) != EOF)
+	{
+
+        if (t == '\n' || t == '\r')
+		{
+			if(char_count > WMAX)
+			{
+				WMAX = char_count;
+			}
+            lines_count++;
+			char_count = 0;
+		}
+		else
+			char_count++;
+    }
+	if(lines_count > 1)
+		lines_count++; //Linea adicional porque no existe \n inicial
+    fclose(txt);
+    if (opt == 0)
+        return lines_count;
+    else
+        return WMAX;
+}
+/**
+ * @brief Lee un archivo y transforma el contenido en un arreglo de strings
+ * 
+ * @param file archivo
+ * @return char** Devuelve el arreglo
+ */
+char **readText(const char *file)
+{
+    unsigned long lines = fileLines(file, 0);
+    unsigned long chars = fileLines(file, 1);
+    if (lines == 0 || chars == 0)
+        return NULL;
+
+    FILE *txt = fopen(file, "r");
+    if (!txt)
+        return NULL;
+
+    char **arr = calloc(lines, sizeof(char *));
+    if (!arr) {
+        fclose(txt);
+        return NULL;
+    }
+
+    for (unsigned long i = 0; i < lines; i++) {
+        arr[i] = calloc(chars + 2, sizeof(char)); /* room for newline + NUL */
+        if (!arr[i]) {
+            fclose(txt);
+            /* free anything already allocated */
+            for (unsigned long j = 0; j < i; j++)
+                free(arr[j]);
+            free(arr);
+            return NULL;
+        }
+        if (!fgets(arr[i], (int)(chars + 2), txt))
+            arr[i][0] = '\0';
+        arr[i][strcspn(arr[i], "\r\n")] = '\0';
+    }
+    fclose(txt);
+    return arr;
+}
+
+#endif /* TOOLS_H */

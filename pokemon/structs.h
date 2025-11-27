@@ -4,27 +4,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef char array;
+typedef struct pokemon_{
+    char *name;
+    char *move_set[4];
+    char **ascii;
+    unsigned int attack;
+    unsigned int defense;
+    unsigned int speed;
+    unsigned int hp;
+}pkmn;
 
 typedef struct player_{
     char *name;
-    int id;
-    array table[10][10];
+    pkmn *monster;
 }ply;
+
 
 /**
  * @brief Inicializar estructura jugador
  * 
  * @return struct ply 
  */
+
+
 ply initPly(){
     ply current;
-    current.id = 0;
-    for(int y = 0; y < 10; y++){
-        for(int x = 0; x < 10; x++){
-            current.table[y][x] = '0';
-        }
-    }
+    current.name = NULL;
+    current.monster = NULL;
     return current;
 }
 #endif /* STRUCTS_H */
