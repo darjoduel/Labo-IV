@@ -56,9 +56,9 @@ void printAwns(awns_box *b);
 void freeAwns(awns_box *b);
 char *Ask(const char *question, int chars);
 
-void initTxtBox(txt_box *t, char *file, char *txt[], int n ,const char *title, int x, int y, int align);
+void initTxtBox(txt_box *t, char *txt[], int n ,const char *title, int x, int y, int align);
 void printBox(txt_box *t);
-void dialFromFile(char *file, const char *title, int x, int y, int align);
+void dialFromFile(const char *file, const char *title, int x, int y, int align, int center);
 void dialFromStr(char *txt[], int n, const char *title, int x, int y, int align, int center);
 
 /**
@@ -264,7 +264,7 @@ char *Ask(const char *question, int chars)
     return strdup(awnser);
 }
 
-void initTxtBox(txt_box *t, char *file, char *txt[], int n ,const char *title, int x, int y, int align)
+void initTxtBox(txt_box *t, char *txt[], int n ,const char *title, int x, int y, int align)
 {
     /* title es opcional; evita strlen(NULL) */
     if (title) {
@@ -277,25 +277,10 @@ void initTxtBox(txt_box *t, char *file, char *txt[], int n ,const char *title, i
 
     t->align = align;
 
-    if(file && !txt)
-    {
-        t->w = (int)fileLines(file, 1);
-        t->h = (int)fileLines(file, 0);
-        t->txt = readText(file);
-        t->owns_txt = 1;
-    }
-    else if(!file && txt)
-    {
-        t->txt = txt;
-        t->w = largestStr(txt, n);
-        t->h = n;
-        t->owns_txt = 0; /* caller owns the backing strings */
-    }
-    else
-    {
-        perror("Error: file & str array are NULL");
-        exit(1);
-    }
+    t->txt = txt;
+    t->w = largestStr(txt, n);
+    t->h = n;
+    t->owns_txt = 0; /* caller owns the backing strings */
     t->win = newwin(t->h + 2, t->w + 2, y, x);
     keypad(t->win, TRUE);
 }
@@ -339,6 +324,7 @@ void delBox(txt_box *t)
         free(t->txt);
     }
     t->txt = NULL;
+    t->owns_txt = 0;
     wborder(t->win, ' ', ' ', ' ',' ',' ',' ',' ',' ');
     wclear(t->win);
     wrefresh(t->win);
@@ -354,19 +340,23 @@ void delBox(txt_box *t)
     free(t);
 }
 
-void dialFromFile(char *file, const char *title, int x, int y, int align)
+void dialFromFile(const char *file, const char *title, int x, int y, int align, int center)
 {
     txt_box *blob = malloc(sizeof(txt_box));
     if(center)
     {
-        int box_w = largestStr(txt, n) + 2;
-        int box_h = n + 2;
+        int box_w = (int)fileLines(file, 1) + 2;
+        int box_h = (int)fileLines(file, 0) + 2;
         int x_ = (getmaxx(stdscr) - box_w) / 2;
         int y_ = (getmaxy(stdscr) - box_h) / 2;
-        initTxtBox(blob, file, NULL, n, title, x_, y_, align);
+        initTxtBox(blob, readText(file), (int)fileLines(file, 0), title, x_, y_, align);
+        blob->owns_txt = 1;
     }
     else
-        initTxtBox(blob, file, NULL, n, title, x, y, align);
+    {
+        initTxtBox(blob, readText(file), (int)fileLines(file, 0), title, x, y, align);
+        blob->owns_txt = 1;
+    }
     printBox(blob);
     wgetch(blob->win);
     delBox(blob);
@@ -381,10 +371,10 @@ void dialFromStr(char *txt[], int n, const char *title, int x, int y, int align,
         int box_h = n + 2;
         int x_ = (getmaxx(stdscr) - box_w) / 2;
         int y_ = (getmaxy(stdscr) - box_h) / 2;
-        initTxtBox(blob, NULL, txt, n, title, x_, y_, align);
+        initTxtBox(blob, txt, n, title, x_, y_, align);
     }
     else
-        initTxtBox(blob, NULL, txt, n, title, x, y, align);
+        initTxtBox(blob, txt, n, title, x, y, align);
     printBox(blob);
     wgetch(blob->win);
     delBox(blob);
