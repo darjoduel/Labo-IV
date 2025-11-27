@@ -9,6 +9,7 @@ int mainMenu(ply *Player);
 int askName(ply *Player);
 void printTitle();
 void credits();
+void local(ply *cur);
 
 int mainMenu(ply *Player)
 {
@@ -19,10 +20,11 @@ int mainMenu(ply *Player)
         "Creditos",
         "Salir"
     };
-    int selection = menu("Menu", choices, 4);
+    int selection = menu("Menu", choices, sizeof(choices)/sizeof(char*));
     switch(selection)
     {
         case 0:
+            local(Player);
             break;
         case 1:
             askName(Player);
@@ -117,4 +119,15 @@ void credits()
     dialFromStr(txt, rows, "Creditos", 0, 0, ALIGN_CENTER, TXT_CENTER);
 }
 
+void local(ply *cur)
+{
+    char *pklist[] = {
+        "Venosaur",
+        "Blastoise",
+        "Charizard"
+    };
+    int pkmn = menu("Entrenador, elige tu pokemon", pklist, sizeof(pklist)/sizeof(char*));
+    pkmnSet(cur, pklist[pkmn]);
+    
+}
 #endif
